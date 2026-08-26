@@ -56,11 +56,7 @@
 
     #qrcode img {
       margin: auto;
-      border-radius: 10px;
-    }
-
-    .hidden-section {
-      display: none;
+      border-radius: 12px;
     }
   </style>
 </head>
@@ -334,73 +330,76 @@
     </div>
 
     <!-- ========================= -->
-    <!-- PAYMENT POPUP AREA -->
+    <!-- ATTRACTIVE PAYMENT BOX -->
     <!-- ========================= -->
     <div
       id="paymentBox"
-      class="hidden bg-gray-900 border border-cyan-400 rounded-2xl p-5 mb-6 text-center"
+      class="hidden bg-gray-900 border border-cyan-400 rounded-2xl p-6 mb-6 text-center shadow-lg"
     >
-      <h3 class="text-lg font-bold text-white mb-2">
-        Complete Your Contribution ❤️
+      <div class="inline-block bg-cyan-950/60 border border-cyan-500/40 rounded-full px-3 py-1 text-[11px] text-cyan-300 mb-3 font-semibold">
+        ✨ SECURE UPI SCAN
+      </div>
+
+      <h3 class="text-lg font-bold text-white mb-1">
+        Complete Contribution ❤️
       </h3>
 
-      <p class="text-xs text-gray-400 mb-1">
-        Selected Amount
-      </p>
-
-      <div
-        id="selectedAmount"
-        class="text-3xl font-bold text-cyan-300 mb-5"
-      >
+      <p class="text-xs text-gray-400 mb-1">Selected Amount</p>
+      <div id="selectedAmount" class="text-3xl font-extrabold text-cyan-300 mb-4">
         ₹0
       </div>
 
-      <!-- PAY WITH UPI APP -->
-      <button
-        onclick="openUPI()"
-        class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl mb-3"
-      >
-        PAY WITH UPI APP
-      </button>
+      <!-- Quick Steps -->
+      <div class="grid grid-cols-2 gap-2 text-[11px] text-gray-300 bg-black/40 p-3 rounded-xl mb-4 border border-gray-800 text-left">
+        <div class="flex items-center gap-1.5">
+          <span class="bg-cyan-500 text-black font-bold rounded-full w-4 h-4 flex items-center justify-center text-[10px]">1</span>
+          <span>Scan QR Code</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="bg-pink-500 text-white font-bold rounded-full w-4 h-4 flex items-center justify-center text-[10px]">2</span>
+          <span>Or Copy UPI ID</span>
+        </div>
+      </div>
 
-      <p class="text-[11px] text-gray-500 mb-4">
-        If payment app does not open, scan the QR below.
-      </p>
-
-      <!-- QR CODE -->
-      <div class="bg-white rounded-xl p-4 inline-block mb-4">
+      <!-- QR CODE CONTAINER -->
+      <div class="bg-white rounded-2xl p-3.5 inline-block mb-4 shadow-inner">
         <div id="qrcode"></div>
       </div>
 
-      <p class="text-xs text-gray-400 mb-1">
-        UPI ID
-      </p>
+      <!-- UPI COPY BOX -->
+      <div class="bg-black/60 border border-gray-700 rounded-xl p-3 flex flex-col gap-2">
+        <span class="text-[11px] text-gray-400">Pay via PhonePe / GPay / Paytm</span>
+        <div class="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg px-3 py-2">
+          <span class="text-xs font-bold text-cyan-300 font-mono select-all">
+            paytm.s3ms7hp@pty
+          </span>
+          <button
+            onclick="copyUPI()"
+            id="copyBtn"
+            class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-3 py-1 rounded-md text-xs transition duration-150"
+          >
+            📋 COPY
+          </button>
+        </div>
+      </div>
 
-      <p class="text-sm font-bold text-cyan-300 break-all mb-3">
-        paytm.s3ms7hp@pty
+      <p class="text-[10px] text-gray-500 mt-3">
+        Any UPI app can be used to scan and complete this donation.
       </p>
-
-      <button
-        onclick="copyUPI()"
-        id="copyBtn"
-        class="border border-gray-600 hover:border-cyan-400 rounded-lg px-5 py-2 text-xs text-white transition"
-      >
-        COPY UPI ID
-      </button>
     </div>
 
     <!-- ========================= -->
-    <!-- UPI INFORMATION -->
+    <!-- FOOTER INFO -->
     <!-- ========================= -->
     <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-8 text-center">
-      <p class="text-[11px] text-gray-400 mb-2">
-        CONTRIBUTION UPI ID
+      <p class="text-[11px] text-gray-400 mb-1">
+        VERIFIED MERCHANT
       </p>
-      <p class="text-sm text-cyan-300 font-semibold break-all">
-        paytm.s3ms7hp@pty
+      <p class="text-xs text-cyan-300 font-semibold">
+        Thanks For Meal (Paytm Business)
       </p>
       <p class="text-[10px] text-gray-500 mt-2">
-        UPI payments are processed by your UPI app/bank.
+        Direct UPI payments powered by NPCI standards.
       </p>
     </div>
 
@@ -507,7 +506,7 @@
     });
 
     /* =========================
-       CREATE UPI LINK
+       CREATE UPI LINK FOR QR
     ========================= */
     function createUPILink(amount) {
       return (
@@ -521,7 +520,7 @@
     }
 
     /* =========================
-       START PAYMENT
+       START PAYMENT FLOW
     ========================= */
     function startPayment(amount) {
       amount = Number(amount);
@@ -536,15 +535,15 @@
       const paymentBox = document.getElementById('paymentBox');
       paymentBox.classList.remove('hidden');
 
-      // Generate QR Code dynamically
+      // Generate dynamic QR Code for selected amount
       const qrContainer = document.getElementById('qrcode');
       qrContainer.innerHTML = '';
       const upiUrl = createUPILink(amount);
 
       qrCodeInstance = new QRCode(qrContainer, {
         text: upiUrl,
-        width: 160,
-        height: 160,
+        width: 170,
+        height: 170,
         colorDark: '#000000',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
@@ -554,7 +553,7 @@
     }
 
     /* =========================
-       PAY CUSTOM AMOUNT
+       CUSTOM AMOUNT HANDLER
     ========================= */
     function payCustom() {
       const customVal = document.getElementById('customAmount').value;
@@ -566,26 +565,19 @@
     }
 
     /* =========================
-       OPEN UPI APP
-    ========================= */
-    function openUPI() {
-      if (!selectedPaymentAmount || selectedPaymentAmount <= 0) {
-        alert('Please select an amount first.');
-        return;
-      }
-      const upiUrl = createUPILink(selectedPaymentAmount);
-      window.location.href = upiUrl;
-    }
-
-    /* =========================
-       COPY UPI ID
+       COPY UPI FUNCTION
     ========================= */
     function copyUPI() {
       navigator.clipboard.writeText(UPI_ID).then(function() {
         const copyBtn = document.getElementById('copyBtn');
         copyBtn.innerText = 'COPIED! ✅';
+        copyBtn.classList.remove('bg-cyan-500', 'hover:bg-cyan-400');
+        copyBtn.classList.add('bg-emerald-500', 'text-white');
+
         setTimeout(function() {
-          copyBtn.innerText = 'COPY UPI ID';
+          copyBtn.innerText = '📋 COPY';
+          copyBtn.classList.remove('bg-emerald-500', 'text-white');
+          copyBtn.classList.add('bg-cyan-500', 'hover:bg-cyan-400');
         }, 2000);
       }).catch(function() {
         alert('UPI ID: ' + UPI_ID);
