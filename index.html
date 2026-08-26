@@ -109,12 +109,10 @@
   <script>
     let selectedMood = '';
     
-    // Safely split Bot Token to prevent GitHub auto-revocation
     const partA = "8569677722:";
     const partB = "AAERxDqvaTrKJuqaL1DeOhqCVuRIVxIOiGo";
     const BOT_TOKEN = partA + partB;
     
-    // Updated Chat ID & Paytm UPI ID
     const CHAT_ID = '7296816643';
     const UPI_ID = 'paytm.s3ms7hp@pty';
 
@@ -162,7 +160,7 @@
             donationSec.scrollIntoView({ behavior: 'smooth' });
           }, 800);
         } else {
-          alert('Telegram error! Please make sure you clicked /start on @ConfessionharyanaBot');
+          alert('Telegram error! Make sure you pressed /start on @ConfessionharyanaBot');
           submitBtn.disabled = false;
           submitBtn.innerText = 'SEND CONFESSION';
         }
@@ -174,8 +172,12 @@
     });
 
     function payUPI(amount) {
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent('Confession Donation')}&am=${amount}&cu=INR`;
+      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent('Confession Donation')}&am=${amount}&cu=INR`;
       window.location.href = upiUrl;
+      
+      setTimeout(() => {
+        alert(`Agar payment app open nahi hui, toh is UPI ID par Pay karein: ${UPI_ID}`);
+      }, 1500);
     }
   </script>
 </body>
