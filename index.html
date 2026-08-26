@@ -80,7 +80,7 @@
         <img src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=300" class="rounded-lg object-cover h-24 w-full" alt="Child 2"/>
         <img src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=300" class="rounded-lg object-cover h-24 w-full" alt="Child 3"/>
         <img src="https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=300" class="rounded-lg object-cover h-24 w-full" alt="Child 4"/>
-        <img src="https://images.unsplash.com/photo-1473643080238-12fc45e09512?w=300" class="rounded-lg object-cover h-24 w-full" alt="Child 5"/>
+        <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300" class="rounded-lg object-cover h-24 w-full" alt="Child 5"/>
         <img src="https://images.unsplash.com/photo-1472162072942-cd5147eb3902?w=300" class="rounded-lg object-cover h-24 w-full" alt="Child 6"/>
       </div>
       <p class="text-[11px] text-center text-gray-400 mb-4">Happy kids sharing a warm meal, made possible by people like you</p>
@@ -94,7 +94,8 @@
       <h3 class="text-xs font-bold tracking-widest text-pink-500 uppercase">CHOOSE A WAY TO GIVE</h3>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 mb-8">
+    <!-- Donation Buttons Grid -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
       <div onclick="payUPI(10)" class="bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center cursor-pointer hover:border-pink-500 transition">
         <div class="text-xl font-bold text-white mb-1">₹10</div>
         <div class="text-[11px] text-gray-400">Provides 1 Warm Meal</div>
@@ -103,6 +104,20 @@
         <div class="text-xl font-bold text-white mb-1">₹20</div>
         <div class="text-[11px] text-gray-400">Provides 2 Meals</div>
       </div>
+      <div onclick="payUPI(30)" class="bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center cursor-pointer hover:border-pink-500 transition">
+        <div class="text-xl font-bold text-white mb-1">₹30</div>
+        <div class="text-[11px] text-gray-400">Provides 3 Meals</div>
+      </div>
+      <div onclick="payUPI(100)" class="bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center cursor-pointer hover:border-pink-500 transition">
+        <div class="text-xl font-bold text-white mb-1">₹100</div>
+        <div class="text-[11px] text-gray-400">Full Meal Box</div>
+      </div>
+    </div>
+
+    <!-- Custom Amount Input -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-3 mb-8 flex gap-2">
+      <input type="number" id="customAmount" placeholder="Enter custom amount (₹)" class="w-full bg-black/60 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400" min="1"/>
+      <button onclick="payCustomUPI()" class="bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 rounded-lg text-xs transition">PAY</button>
     </div>
   </div>
 
@@ -172,12 +187,20 @@
     });
 
     function payUPI(amount) {
-      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent('Confession Donation')}&am=${amount}&cu=INR`;
-      window.location.href = upiUrl;
+      const name = 'Confession Donation';
+      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR`;
       
-      setTimeout(() => {
-        alert(`Agar payment app open nahi hui, toh is UPI ID par Pay karein: ${UPI_ID}`);
-      }, 1500);
+      // Opens payment app directly
+      window.location.href = upiUrl;
+    }
+
+    function payCustomUPI() {
+      const amt = document.getElementById('customAmount').value;
+      if(!amt || amt <= 0) {
+        alert('Please enter a valid amount!');
+        return;
+      }
+      payUPI(amt);
     }
   </script>
 </body>
