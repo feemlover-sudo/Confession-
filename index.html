@@ -646,29 +646,43 @@
     }
 
     /* =========================
-       DOWNLOAD QR CODE
+       DOWNLOAD QR CODE (WITH QUIET ZONE / WHITE BORDER)
     ========================= */
     function downloadQRImage() {
       const qrCanvas = document.querySelector('#qrcode canvas');
       const qrImg = document.querySelector('#qrcode img');
-      let dataUrl = '';
+      const source = qrCanvas || qrImg;
 
-      if (qrCanvas) {
-        dataUrl = qrCanvas.toDataURL('image/png');
-      } else if (qrImg && qrImg.src) {
-        dataUrl = qrImg.src;
+      if (!source) {
+        alert('Pehle amount select karke QR generate karein!');
+        return;
       }
 
-      if (dataUrl) {
-        const downloadLink = document.createElement('a');
-        downloadLink.href = dataUrl;
-        downloadLink.download = `Meal-Support-QR-₹${selectedPaymentAmount}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      } else {
-        alert('Long press on QR image to save it to your gallery!');
-      }
+      // Scanner ke liye 30px ka solid white border banayein
+      const padding = 30;
+      const borderedCanvas = document.createElement('canvas');
+      const baseWidth = qrCanvas ? qrCanvas.width : (qrImg.naturalWidth || 170);
+      const baseHeight = qrCanvas ? qrCanvas.height : (qrImg.naturalHeight || 170);
+
+      borderedCanvas.width = baseWidth + (padding * 2);
+      borderedCanvas.height = baseHeight + (padding * 2);
+
+      const ctx = borderedCanvas.getContext('2d');
+
+      // Pure background ko solid white fill karein
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, borderedCanvas.width, borderedCanvas.height);
+
+      // QR Code ko center mein draw karein
+      ctx.drawImage(source, padding, padding, baseWidth, baseHeight);
+
+      // Download trigger karein
+      const downloadLink = document.createElement('a');
+      downloadLink.href = borderedCanvas.toDataURL('image/png');
+      downloadLink.download = `Meal-Support-QR-₹${selectedPaymentAmount}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     }
 
     /* =========================
