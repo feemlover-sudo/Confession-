@@ -77,6 +77,15 @@
     .insta-gradient-btn {
       background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
     }
+
+    /* Recording Pulsing Indicator */
+    @keyframes pulseRed {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.1); }
+    }
+    .recording-pulse {
+      animation: pulseRed 1s infinite ease-in-out;
+    }
   </style>
 </head>
 
@@ -187,11 +196,27 @@
           rows="4"
           placeholder="Dil ki baat likho..."
           class="w-full bg-black/60 border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-400"
-          required
         ></textarea>
       </div>
 
-      <!-- Feature 2 & 3: Word Counter & Motivational Feedback -->
+      <!-- Feature: Voice Recording Box -->
+      <div class="mb-4 bg-black/40 border border-gray-800 rounded-xl p-3">
+        <div class="flex items-center justify-between">
+          <button
+            type="button"
+            id="recordVoiceBtn"
+            onclick="toggleAudioRecording()"
+            class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+          >
+            <i id="micIcon" class="fa-solid fa-microphone"></i>
+            <span id="recordBtnText">Record Voice Confession</span>
+          </button>
+          <span id="recordTimer" class="text-[11px] text-gray-400 font-mono hidden">00:00</span>
+        </div>
+        <audio id="audioPreview" controls class="w-full mt-2.5 hidden h-8"></audio>
+      </div>
+
+      <!-- Word Counter & Motivation Badge -->
       <div class="flex justify-between items-center text-[11px] mb-5 px-1">
         <span id="wordCounter" class="text-gray-500 font-mono">0 words</span>
         <span id="motivationBadge" class="text-cyan-400 font-medium"></span>
@@ -215,13 +240,13 @@
     <h2 class="text-base font-bold text-white mb-1">Aapka bojh release ho gaya!</h2>
     <p class="text-xs text-gray-400 mb-4">You are brave for expressing yourself today.</p>
     
-    <!-- NEW: Highlight Notice for Instagram Feature -->
+    <!-- Highlight Notice for Instagram Feature -->
     <div class="bg-black/50 border border-pink-500/30 rounded-xl p-3.5 mb-4 text-xs text-gray-300 leading-relaxed text-center">
       ✨ <strong class="text-pink-400">Aapka Donation & Confession</strong> hamare Instagram page par Reels aur Stories mein share kiya jata hai (Naam bilkul anonymous rahega)! 🤫
       <p class="mt-1 text-gray-400 text-[11px]">Logon ke reactions aur replies dekhne ke liye account check karein 👇</p>
     </div>
 
-    <!-- NEW: Instagram Loop Button -->
+    <!-- Instagram Loop Button -->
     <a
       href="https://www.instagram.com/roomconfession555?igsh=MXU4cDFnenprenFoZw=="
       target="_blank"
@@ -254,7 +279,7 @@
       </p>
     </div>
 
-    <!-- Feature 6 & 7: Daily Meal Goal Progress & Live Supporter Feed -->
+    <!-- Daily Meal Goal Progress & Live Supporter Feed -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6">
       <div class="flex justify-between items-center text-xs font-semibold mb-2">
         <span class="text-gray-300 flex items-center gap-1.5">
@@ -339,7 +364,6 @@
     <!-- AMOUNT BUTTONS -->
     <!-- ========================= -->
     <div class="grid grid-cols-2 gap-3 mb-4">
-      <!-- ₹10 -->
       <button
         onclick="startPayment(10)"
         class="payment-card bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center"
@@ -348,7 +372,6 @@
         <div class="text-[11px] text-gray-400">Provides 1 Warm Meal</div>
       </button>
 
-      <!-- ₹20 -->
       <button
         onclick="startPayment(20)"
         class="payment-card bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center"
@@ -357,7 +380,6 @@
         <div class="text-[11px] text-gray-400">Provides 2 Meals</div>
       </button>
 
-      <!-- ₹30 -->
       <button
         onclick="startPayment(30)"
         class="payment-card bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center"
@@ -366,7 +388,6 @@
         <div class="text-[11px] text-gray-400">Provides 3 Meals</div>
       </button>
 
-      <!-- ₹100 -->
       <button
         onclick="startPayment(100)"
         class="payment-card bg-gray-900 border border-pink-500/50 rounded-xl p-4 text-center"
@@ -442,12 +463,12 @@
         <div id="qrcode"></div>
       </div>
 
-      <!-- NEW: Screenshot Hint Line -->
+      <!-- Screenshot Hint Line -->
       <p class="text-[12px] text-gray-400 font-medium my-2">
         📸 Take a screenshot of QR & support us ❤️
       </p>
 
-      <!-- Feature 8: Download QR Button -->
+      <!-- Direct Download QR Button -->
       <div class="mb-4">
         <button
           onclick="downloadQRImage()"
@@ -519,6 +540,62 @@
     const CHAT_ID = '7296816643';
 
     /* =========================
+       VOICE RECORDING ENGINE
+    ========================= */
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedAudioBlob = null;
+    let recordInterval = null;
+    let recordSeconds = 0;
+
+    async function toggleAudioRecording() {
+      const btnText = document.getElementById('recordBtnText');
+      const micIcon = document.getElementById('micIcon');
+      const timer = document.getElementById('recordTimer');
+      const preview = document.getElementById('audioPreview');
+
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            recordedAudioBlob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+            preview.src = URL.createObjectURL(recordedAudioBlob);
+            preview.classList.remove('hidden');
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          recordSeconds = 0;
+          timer.classList.remove('hidden');
+          timer.innerText = '00:00';
+          recordInterval = setInterval(() => {
+            recordSeconds++;
+            const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+            const secs = String(recordSeconds % 60).padStart(2, '0');
+            timer.innerText = `${mins}:${secs}`;
+          }, 1000);
+
+          micIcon.classList.add('text-red-500', 'recording-pulse');
+          btnText.innerText = 'Stop Recording ⏹️';
+        } catch (err) {
+          alert('Microphone permission zaruri hai voice record karne ke liye.');
+        }
+      } else if (mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        clearInterval(recordInterval);
+        micIcon.classList.remove('text-red-500', 'recording-pulse');
+        btnText.innerText = 'Re-record Voice 🎙️';
+      }
+    }
+
+    /* =========================
        WORD COUNTER & MOTIVATION
     ========================= */
     const msgInput = document.getElementById('message');
@@ -557,7 +634,7 @@
     }
 
     /* =========================
-       CONFESSION SUBMIT (TELEGRAM)
+       CONFESSION SUBMIT (TELEGRAM + COUNTER)
     ========================= */
     document.getElementById('confessionForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -567,26 +644,29 @@
       const location = document.getElementById('location').value.trim() || 'Not specified';
       const msg = document.getElementById('message').value.trim();
 
-      if (!msg) {
-        alert('Please write your confession.');
+      if (!msg && !recordedAudioBlob) {
+        alert('Please write your confession ya mic se voice record karein.');
         return;
       }
 
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SENDING...';
 
-      // Unique Confession Tag
-      const confessionId = '#' + Math.floor(1000 + Math.random() * 9000);
+      // Sequential Counter (#1, #2, #3...)
+      let count = parseInt(localStorage.getItem('confessionNumber') || '0', 10) + 1;
+      localStorage.setItem('confessionNumber', count);
+      const confessionTag = `#${count}`;
 
+      // Clean Telegram Message (No Time / Date)
       const telegramText =
-        '📩 *NEW ANONYMOUS CONFESSION (' + confessionId + ')*\n\n' +
+        '📩 *NEW ANONYMOUS CONFESSION (' + confessionTag + ')*\n\n' +
         '👤 *Instagram:* ' + instaId + '\n' +
         '📍 *Location:* ' + location + '\n' +
         '🎭 *Mood:* ' + selectedMood + '\n\n' +
-        '💬 *Message:*\n' + msg + '\n\n' +
-        '⏰ *Time:* ' + new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+        '💬 *Message:*\n' + (msg || '(Voice Note Attached 🎙️)');
 
       try {
+        // Send Text Message
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -597,7 +677,20 @@
           })
         });
 
-        // Form Animation & Switch to Thank You + Donation section
+        // Send Voice Note if recorded
+        if (recordedAudioBlob) {
+          const formData = new FormData();
+          formData.append('chat_id', CHAT_ID);
+          formData.append('voice', recordedAudioBlob, `confession-${count}.ogg`);
+          formData.append('caption', `🎙️ Voice Note for Confession ${confessionTag}`);
+
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVoice`, {
+            method: 'POST',
+            body: formData
+          });
+        }
+
+        // Switch to Thank You + Donation Section
         const box = document.getElementById('confessionBox');
         box.classList.add('flying-out');
 
@@ -609,8 +702,8 @@
         }, 750);
 
       } catch (error) {
-        console.error('Error:', error);
-        alert('Confession sent! Thank you.');
+        console.error('Submission Error:', error);
+        alert('Confession received! Thank you.');
         document.getElementById('confessionBox').classList.add('hidden');
         document.getElementById('thankYouBanner').classList.remove('hidden');
         document.getElementById('donationSection').classList.remove('hidden');
@@ -675,42 +768,30 @@
     }
 
     /* =========================
-       SMART SAVE QR IMAGE
+       DIRECT QR DOWNLOAD (CHROME & BROWSERS)
     ========================= */
-    async function downloadQRImage() {
-      const img = document.querySelector('#qrcode img') || document.querySelector('#qrcode canvas');
-      if (!img) return;
-
-      const imgSrc = img.src || (img.toDataURL ? img.toDataURL('image/png') : '');
-      if (!imgSrc) return;
-
-      // Check Native Web Share API (Works in modern mobile browsers)
-      if (navigator.share && navigator.canShare) {
-        try {
-          const res = await fetch(imgSrc);
-          const blob = await res.blob();
-          const file = new File([blob], 'donation-qr.png', { type: 'image/png' });
-
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'Donation QR Code',
-              text: 'Scan this QR to support our meal drive ❤️'
-            });
-            return;
-          }
-        } catch (e) {
-          console.log('Share canceled/failed, using fallback.');
-        }
+    function downloadQRImage() {
+      const canvas = document.querySelector('#qrcode canvas');
+      const img = document.querySelector('#qrcode img');
+      
+      let dataUrl = '';
+      if (canvas) {
+        dataUrl = canvas.toDataURL('image/png');
+      } else if (img && img.src) {
+        dataUrl = img.src;
       }
 
-      // Standard Download Fallback
-      const a = document.createElement('a');
-      a.href = imgSrc;
-      a.download = `Donation-QR-₹${selectedPaymentAmount}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      if (!dataUrl) {
+        alert('QR code generate ho raha hai, thoda wait karein.');
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Donation-QR-₹${selectedPaymentAmount || 'Support'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
